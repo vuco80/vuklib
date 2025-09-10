@@ -20,7 +20,6 @@ Platform* Platform::instance() {
 	
 int Platform::createAndShowWindow(const std::string& caption) {
 	SDL_Init(SDL_INIT_VIDEO);
-	IMG_Init();
 	TTF_Init();
 	
 	m_window = SDL_CreateWindow(caption.c_str(), 800, 600, 0);
@@ -37,10 +36,10 @@ void Platform::quit() {
 	if(m_window != nullptr) SDL_DestroyWindow(m_window);
 }
 
-int Platform::pollEvents(IPlatformEventListener* listener) {
+void Platform::pollEvents(IPlatformEventListener* listener) {
 	SDL_Event evt;
 	while(SDL_PollEvent(&evt)) {
-		listener->OnPlatformEvent(&evt);
+		listener->OnEvent(&evt);
 	}
 }
 
@@ -119,18 +118,20 @@ void Platform::initFrameTimer(int updateStepMs) {
 	m_updateStepMs = updateStepMs;
 }
 
-void executeFrame(IPlatformFrameListener* listener);
+void Platform::executeFrame(IPlatformFrameListener* listener) {
 	Uint32 now = SDL_GetTicks();
 	Uint32 elapsed = now - m_frameTime;
 	m_frameTime = now;
 	m_frameTimeAccumulator += elapsed;
 	
-	while(m_frameTimeAccumulator >= m_updatestepMs) {
-		m_frameTimeAccumulator -= m_updatestepMs;
+	while(m_frameTimeAccumulator >= m_updateStepMs) {
+		m_frameTimeAccumulator -= m_updateStepMs;
 		listener->OnFrameUpdateStep();
 	}
 	
 	SDL_RenderClear(m_renderer);
 	listener->OnFrameRender(elapsed);
 	SDL_RenderPresent(m_renderer);
+}
+
 };

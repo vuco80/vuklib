@@ -1,9 +1,9 @@
 #ifndef VUK_PLATFORM_H
-#include UK_PLATFORM_H
+#define VUK_PLATFORM_H
 
 #include <SDL3/SDL.h>
-#include <SDL3/SDL_image.h>
-#include <SDL3/SDL_ttf.h>
+#include <SDL3_image/SDL_image.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <map>
 #include <string>
 
@@ -35,7 +35,7 @@ public:
 	int createAndShowWindow(const std::string& caption);
 	void quit();
 	
-	int pollEvents(IPlatformEventListener* listener);
+	void pollEvents(IPlatformEventListener* listener);
 	
 	int loadTexture(const std::string& filename, SDL_Texture** dst, int* width, int* height);
 	int createTexture(SDL_Texture** dst, int width, int height);
