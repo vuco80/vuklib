@@ -10,7 +10,10 @@ IPlatformFrameListener::~IPlatformFrameListener(){}
 
 Platform* Platform::m_instance = nullptr;
 
-Platform::Platform() : m_window(nullptr), m_renderer(nullptr), m_updateStepMs(16) {}
+Platform::Platform() : m_window(nullptr), m_renderer(nullptr), m_updateStepMs(16) {
+	SDL_Init(SDL_INIT_VIDEO);
+	TTF_Init();
+}
 Platform::~Platform(){}
 
 Platform* Platform::instance() {
@@ -18,11 +21,8 @@ Platform* Platform::instance() {
 	return m_instance;
 }
 	
-int Platform::createAndShowWindow(const std::string& caption) {
-	SDL_Init(SDL_INIT_VIDEO);
-	TTF_Init();
-	
-	m_window = SDL_CreateWindow(caption.c_str(), 800, 600, 0);
+int Platform::createAndShowWindow(const std::string& caption, int width, int height) {
+	m_window = SDL_CreateWindow(caption.c_str(), width, height, 0);
 	if(m_window == nullptr) return 1;
 	
 	m_renderer = SDL_CreateRenderer(m_window, 0);
@@ -34,6 +34,27 @@ int Platform::createAndShowWindow(const std::string& caption) {
 void Platform::quit() {
 	if(m_renderer != nullptr) SDL_DestroyRenderer(m_renderer);
 	if(m_window != nullptr) SDL_DestroyWindow(m_window);
+}
+
+int Platform::resizeWindow(int width, int height) {
+	if(m_window == nullptr) return 1;
+	
+	if(SDL_SetWindowSize(m_window, width, height)) {
+		return 0;
+	}
+	
+	return 2;
+}
+
+int Platform::goFullscreen(int* width, int* height) {
+	if(m_window == nullptr) return 1;
+	
+	if(SDL_SetWindowFullscreenMode(m_window, nullptr)) {
+		SDL_GetWindowSize(m_window, width, height);
+		return 0;
+	}
+	
+	return 2;
 }
 
 void Platform::pollEvents(IPlatformEventListener* listener) {

@@ -32,8 +32,10 @@ public:
 	
 	static Platform* instance();
 	
-	int createAndShowWindow(const std::string& caption);
+	int createAndShowWindow(const std::string& caption, int width, int height);
 	void quit();
+	int resizeWindow(int width, int height);
+	int goFullscreen(int* width, int* height);
 	
 	void pollEvents(IPlatformEventListener* listener);
 	
@@ -57,7 +59,7 @@ private:
 	SDL_Window* m_window;
 	SDL_Renderer* m_renderer;
 	std::map<int, TTF_Font*> m_fonts;
-	int m_updateStepMs;
+	Uint32 m_updateStepMs;
 	Uint32 m_frameTime;
 	Uint32 m_frameTimeAccumulator;
 };
