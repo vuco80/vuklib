@@ -102,6 +102,10 @@ void Platform::renderTexture(SDL_Texture* texture, SDL_FRect* src, SDL_FRect* ds
 	SDL_RenderTexture(m_renderer, texture, src, dst);
 }
 
+void Platform::renderClear() {
+	SDL_RenderClear(m_renderer);
+}
+
 int Platform::loadFont(const std::string& filename, int dimension, int fontId) {
 	if(m_fonts.find(fontId) != m_fonts.end()) return 1;
 	
@@ -150,7 +154,6 @@ void Platform::executeFrame(IPlatformFrameListener* listener) {
 		listener->OnFrameUpdateStep();
 	}
 	
-	SDL_RenderClear(m_renderer);
 	listener->OnFrameRender(elapsed);
 	SDL_RenderPresent(m_renderer);
 }

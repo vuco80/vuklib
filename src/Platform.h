@@ -44,6 +44,7 @@ public:
 	void destroyTexture(SDL_Texture** texture);
 	
 	int setRenderTarget(SDL_Texture* target);
+	void renderClear();
 	void renderTexture(SDL_Texture* texture, SDL_FRect* src, SDL_FRect* dst);
 	
 	int loadFont(const std::string& filename, int dimension, int fontId);
