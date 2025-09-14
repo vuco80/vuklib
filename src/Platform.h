@@ -63,6 +63,7 @@ private:
 	Uint32 m_updateStepMs;
 	Uint32 m_frameTime;
 	Uint32 m_frameTimeAccumulator;
+	Uint32 m_frameTimeRenderAccumulator;
 };
 
 };

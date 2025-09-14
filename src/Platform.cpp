@@ -25,8 +25,12 @@ int Platform::createAndShowWindow(const std::string& caption, int width, int hei
 	m_window = SDL_CreateWindow(caption.c_str(), width, height, 0);
 	if(m_window == nullptr) return 1;
 	
+	//SDL_SetHint(SDL_HINT_RENDER_DRIVER, "direct3d12");
+	
 	m_renderer = SDL_CreateRenderer(m_window, 0);
 	if(m_renderer == nullptr) return 2;
+	
+	SDL_SetRenderVSync(m_renderer, 1);
 	
 	return 0;
 }
@@ -49,7 +53,7 @@ int Platform::resizeWindow(int width, int height) {
 int Platform::goFullscreen(int* width, int* height) {
 	if(m_window == nullptr) return 1;
 	
-	if(SDL_SetWindowFullscreenMode(m_window, nullptr)) {
+	if(SDL_SetWindowFullscreen(m_window, true)) {
 		SDL_GetWindowSize(m_window, width, height);
 		return 0;
 	}
@@ -138,18 +142,27 @@ int Platform::createTextTexture(int fontId, const std::string& text, const SDL_C
 }
 
 void Platform::initFrameTimer(int updateStepMs) {
-	m_frameTime = SDL_GetTicks();
+	m_frameTime = 0;
 	m_frameTimeAccumulator = 0;
+	m_frameTimeRenderAccumulator = 0;
 	m_updateStepMs = updateStepMs;
 }
 
 void Platform::executeFrame(IPlatformFrameListener* listener) {
+	if(m_frameTime == 0) m_frameTime = SDL_GetTicks();
 	Uint32 now = SDL_GetTicks();
 	Uint32 elapsed = now - m_frameTime;
 	m_frameTime = now;
+	
+	/*if(elapsed > 100) {
+		SDL_Log("DISCARD elapsed %d", elapsed);
+		return;
+	}*/
+	
 	m_frameTimeAccumulator += elapsed;
 	
 	while(m_frameTimeAccumulator >= m_updateStepMs) {
+		//SDL_Log("Update");
 		m_frameTimeAccumulator -= m_updateStepMs;
 		listener->OnFrameUpdateStep();
 	}
