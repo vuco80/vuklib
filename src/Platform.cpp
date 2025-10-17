@@ -1,6 +1,32 @@
 #include "Platform.h"
 
 namespace vuk {
+	
+IFrameTrackerListener::IFrameTrackerListener(){}
+IFrameTrackerListener::~IFrameTrackerListener(){}
+
+FrameTracker::FrameTracker(int id, int frequence, IFrameTrackerListener* listener) : m_id(id), m_listener(listener),
+	m_tickFrequence(frequence), m_frameCount(0), m_tickCount(0) {
+}
+
+FrameTracker::~FrameTracker() {
+}
+	
+void FrameTracker::update() {
+	m_frameCount++;
+	if(m_frameCount >= m_tickFrequence) {
+		m_frameCount = 0;
+		m_tickCount++;
+		m_listener->onFrameTrackerTick(m_id, m_tickCount);
+	}
+}
+
+
+int FrameTracker::getId() const {
+	return m_id;
+}
+
+//---
 
 IPlatformEventListener::IPlatformEventListener(){}
 IPlatformEventListener::~IPlatformEventListener(){}
@@ -21,14 +47,14 @@ Platform* Platform::instance() {
 	return m_instance;
 }
 	
-int Platform::createAndShowWindow(const std::string& caption, int width, int height) {
+int Platform::createAndShowWindow(const std::string& caption, int width, int height, int logicWidth, int logicHeight) {
 	m_window = SDL_CreateWindow(caption.c_str(), width, height, 0);
 	if(m_window == nullptr) return 1;
 	
-	//SDL_SetHint(SDL_HINT_RENDER_DRIVER, "direct3d12");
-	
 	m_renderer = SDL_CreateRenderer(m_window, 0);
 	if(m_renderer == nullptr) return 2;
+	
+	SDL_SetRenderLogicalPresentation(m_renderer, logicWidth, logicHeight, SDL_LOGICAL_PRESENTATION_STRETCH);
 	
 	SDL_SetRenderVSync(m_renderer, 1);
 	
@@ -64,6 +90,7 @@ int Platform::goFullscreen(int* width, int* height) {
 void Platform::pollEvents(IPlatformEventListener* listener) {
 	SDL_Event evt;
 	while(SDL_PollEvent(&evt)) {
+		SDL_ConvertEventToRenderCoordinates(m_renderer, &evt);
 		listener->OnEvent(&evt);
 	}
 }
@@ -71,7 +98,7 @@ void Platform::pollEvents(IPlatformEventListener* listener) {
 int Platform::loadTexture(const std::string& filename, SDL_Texture** dst, int* width, int* height) {
 	SDL_Surface* s = IMG_Load(filename.c_str());
 	if(s == 0) return 1;
-	
+	if(m_renderer == nullptr) SDL_Log("renderer null");
 	*dst = SDL_CreateTextureFromSurface(m_renderer, s);
 	if(*dst == 0) {
 		SDL_DestroySurface(s);
@@ -80,7 +107,6 @@ int Platform::loadTexture(const std::string& filename, SDL_Texture** dst, int* w
 	*width = s->w;
 	*height = s->h;
 	SDL_DestroySurface(s);
-	
 	return 0;
 }
 
@@ -104,6 +130,16 @@ int Platform::setRenderTarget(SDL_Texture* target) {
 
 void Platform::renderTexture(SDL_Texture* texture, SDL_FRect* src, SDL_FRect* dst) {
 	SDL_RenderTexture(m_renderer, texture, src, dst);
+}
+
+void Platform::renderRect(bool fill, const SDL_Color& color, const SDL_FRect& rect) {
+	SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
+	if(fill) {
+		SDL_RenderFillRect(m_renderer, &rect);
+	} else {
+		SDL_RenderRect(m_renderer, &rect);
+	}
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
 }
 
 void Platform::renderClear() {
@@ -164,11 +200,33 @@ void Platform::executeFrame(IPlatformFrameListener* listener) {
 	while(m_frameTimeAccumulator >= m_updateStepMs) {
 		//SDL_Log("Update");
 		m_frameTimeAccumulator -= m_updateStepMs;
+		
+		for(auto i = m_frameTrackers.begin(); i<m_frameTrackers.end(); ++i) {
+			(*i).update();
+		}
+		
 		listener->OnFrameUpdateStep();
 	}
 	
 	listener->OnFrameRender(elapsed);
 	SDL_RenderPresent(m_renderer);
+}
+
+void Platform::addFrameTracker(int id, int frequence, IFrameTrackerListener* listener) {
+	m_frameTrackers.push_back(FrameTracker(id, frequence, listener));
+}
+
+void Platform::clearFrameTrackers() {
+	m_frameTrackers.clear();
+}
+
+void Platform::removeFrameTracker(int id) {
+	for(auto i = m_frameTrackers.begin(); i<m_frameTrackers.end(); ++i) {
+		if((*i).getId() == id) {
+			m_frameTrackers.erase(i);
+			break;
+		}
+	}
 }
 
 };
