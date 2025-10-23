@@ -10,6 +10,103 @@
 
 namespace vuk {
 	
+class IGuiListener {
+public:
+	IGuiListener();
+	~IGuiListener();
+	
+	virtual void onGuiClick(int sender) = 0;
+};
+
+class GuiObject {
+public:
+	GuiObject(int id, const SDL_Rect& rect, IGuiListener* listener);
+	virtual ~GuiObject();
+	
+	int getId() const;
+	const SDL_Rect& getRect() const;
+	void onEvent(const SDL_Event* evt);
+	virtual void render(const SDL_Color& primaryColor, const SDL_Color& secondaryColor, const SDL_Color& textColor, int fontId) = 0;
+	bool isHighlighted() const;
+	
+private:
+	void setHighlighted(bool value);
+	
+private:
+	int m_id;
+	SDL_Rect m_rect;
+	IGuiListener* m_listener;
+	bool m_highlighted;
+};
+
+class GuiButton : public GuiObject {
+public:
+	GuiButton(int id, const SDL_Rect& rect, const std::string& text, IGuiListener* listener);
+	~GuiButton();
+	void render(const SDL_Color& primaryColor, const SDL_Color& secondaryColor, const SDL_Color& textColor, int fontId) override;
+private:
+	std::string m_text;
+	SDL_Texture* m_texCaption;
+	int m_captionWidth, m_captionHeight;
+};
+
+class GuiLayout {
+public:
+	GuiLayout(int id, IGuiListener* listener, int fontId, 
+		const SDL_Color& primaryColor, const SDL_Color& secondaryColor, const SDL_Color& textColor);
+	~GuiLayout();
+	
+	int getId() const;
+	int loadGuiObjects(const std::string& scriptFile);
+	
+	void onEvent(const SDL_Event* evt);
+	void onUpdate();
+	void render();
+	
+private:
+	int m_id;
+	IGuiListener* m_listener;
+	int m_fontId;
+	SDL_Color m_primaryColor, m_secondaryColor, m_textColor;
+	std::vector<GuiObject*> m_objects;
+};
+
+class GuiManager {
+public:
+	~GuiManager();
+	static GuiManager* instance();
+	
+	void loadActionsTable(const std::string& actionScript);
+	void addLayout(GuiLayout* layout);
+	void setCurrentLayout(int id);
+	void removeLayout(int id);
+	
+	void onEvent(const SDL_Event* evt);
+	void onUpdate();
+	void render();
+	
+	enum GuiEvents {
+		GuiEvent_Undefined,
+		GuiEvent_OnClick
+	};
+	
+	int getActionForObject(GuiEvents evt, int sender);
+	
+private:
+	GuiManager();
+	
+	struct ActionTableRow {
+		int id;
+		GuiEvents event;
+		int action;
+	};
+	
+	static GuiManager* m_instance;
+	std::vector<GuiLayout*> m_layouts;
+	int m_currentLayout;
+	std::vector<ActionTableRow> m_actionsTable;
+};
+	
 class IFrameTrackerListener {
 public:
 	IFrameTrackerListener();
