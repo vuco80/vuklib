@@ -170,6 +170,7 @@ public:
 	void renderClear();
 	void renderTexture(SDL_Texture* texture, SDL_FRect* src, SDL_FRect* dst);
 	void renderRect(bool fill, const SDL_Color& color, const SDL_FRect& rect);
+	void enableAlphaBlending();
 	
 	int loadFont(const std::string& filename, int dimension, int fontId);
 	int createTextTexture(int fontId, const std::string& text, const SDL_Color& color, int maxWidth, SDL_Texture** dst, int* width, int* height);

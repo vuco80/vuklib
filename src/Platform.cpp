@@ -76,6 +76,10 @@ int Platform::resizeWindow(int width, int height) {
 	return 2;
 }
 
+void Platform::enableAlphaBlending() {
+	SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+}
+
 int Platform::goFullscreen(int* width, int* height) {
 	if(m_window == nullptr) return 1;
 	
